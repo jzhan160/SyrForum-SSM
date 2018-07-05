@@ -1,0 +1,14 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+	 ">
+<bean id="userService" class="com.forum.service.impl.UserServiceImpl"/>
+	<bean id="itemService" class="com.forum.service.impl.ItemServiceImpl"/>
+	<bean id="topicService" class="com.forum.service.impl.TopicServiceImpl"/>
+    <bean id="commentService" class="com.forum.service.impl.CommentServiceImpl"/>
+
+	<bean id="favoriteService" class="com.forum.service.impl.FavoriteServiceImpl"/>
+	<bean id="notificationService" class="com.forum.service.impl.NotificationServiceImpl"/>
+
+</beans>

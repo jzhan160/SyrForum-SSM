@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.forum.mapper.UserMapper">
+
+  <!--<cache type="org.mybatis.caches.ehcache.EhcacheCache"/>-->
+
+  <resultMap type="com.forum.entity.User" id="BaseResultMap">
+    <id column="UserID" property="UserID" jdbcType="INTEGER"/>
+    <result column="UserName" property="UserName" jdbcType="VARCHAR"/>
+    <result column="UserPassword" property="UserPassword" jdbcType="VARCHAR"/>
+    <result column="UserBirthday" property="UserBirthday" jdbcType="DATE"/>
+    <result column="IsAdmin" property="IsAdmin" jdbcType="VARCHAR"/>
+    <result column="Gender" property="Gender" jdbcType="VARCHAR"/>
+    <result column="Email" property="Email" jdbcType="VARCHAR"/>
+    <result column="CreateTime" property="CreateTime" jdbcType="DATE"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    UserID, UserName, UserPassword, UserBirthday,Gender,Email,IsAdmin,CreateTime
+  </sql>
+
+  <insert id="insertUser" parameterType="com.forum.entity.User">
+    <selectKey resultType="java.lang.Integer" keyProperty="UserID"
+               order="AFTER">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    INSERT INTO users(UserName,UserPassword,Email,CreateTime,Gender,IsAdmin) VALUES (#{UserName},#{UserPassword},#{Email},#{CreateTime},#{Gender},#{IsAdmin})
+  </insert>
+
+
+  <delete id="deleteUser" parameterType="java.lang.Integer">
+    DELETE FROM users WHERE UserName = #{UserName}
+  </delete>
+
+  <select id="selectUserById" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+    select
+    <include refid="Base_Column_List"/>
+    from users
+    where UserID = #{UserID,jdbcType=INTEGER}
+  </select>
+
+  <select id="selectAllUsers" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from users
+  </select>
+
+  <select id="selectUserByName" resultMap="BaseResultMap" parameterType="java.lang.String">
+    select
+    <include refid="Base_Column_List"/>
+    from users
+    where UserName = #{UserName,jdbcType=VARCHAR}
+  </select>
+
+
+    <update id="updateByIdSelective" parameterType="com.forum.entity.User">
+        update users
+        SET UserPassword = #{userPassword}
+       <!-- <set>
+            <if test="UserName != null">
+                #{UserName},
+            </if>
+            <if test="UserPassword != null">
+                #{UserPassword},
+            </if>
+            &lt;!&ndash;<if test="userBirthday != null">&ndash;&gt;
+                &lt;!&ndash;#{UserBirthday,jdbcType=DATE},&ndash;&gt;
+            &lt;!&ndash;</if>&ndash;&gt;
+            <if test="Email != null">
+                #{Email}
+            </if>
+        </set>-->
+        where UserID = #{UserID}
+    </update>
+</mapper>
+
+

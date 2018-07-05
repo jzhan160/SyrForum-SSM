@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.forum.mapper.CommentMapper">
+
+    <resultMap type="com.forum.entity.Comment" id="BaseResultMap">
+        <id column="CommentID" property="CommentID" jdbcType="INTEGER"/>
+        <result column="ItemID" property="ItemID" jdbcType="INTEGER"/>
+        <result column="Content" property="Content" jdbcType="VARCHAR"/>
+        <result column="Users_UserID" property="Users_UserID" jdbcType="INTEGER"/>
+        <result column="CreateTime" property="CreateTime" jdbcType="DATE"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        CommentID, ItemID, Content, Users_UserID,CreateTime
+    </sql>
+
+    <select id="selectCommentsByItemId" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM comments
+        WHERE ItemID = #{value}
+        ORDER BY CreateTime DESC;
+    </select>
+
+    <select id="selectCommentById" resultType="com.forum.entity.Comment" parameterType="int">
+        SELECT * FROM comments WHERE CommentID = #{commentID}
+
+    </select>
+
+    <insert id="insertComment" parameterType="com.forum.entity.Comment">
+        <selectKey resultType="java.lang.Integer" keyProperty="CommentID"
+                   order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO comments (ItemID, Content, Users_UserID,CreateTime)
+        VALUES (#{ItemID},#{Content},#{Users_UserID},#{CreateTime})
+    </insert>
+</mapper>

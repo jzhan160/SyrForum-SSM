@@ -1,0 +1,176 @@
+package com.forum.controller;
+
+import com.forum.entity.Item;
+import com.forum.entity.Topic;
+import com.forum.entity.User;
+import com.forum.service.ItemService;
+import com.forum.service.TopicService;
+import com.forum.service.UserService;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadBase;
+import org.apache.commons.fileupload.ProgressListener;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+public class FileUpload {
+
+    private TopicService topicService;
+    private ItemService itemService;
+
+    private String savePath = "E:\\Upload\\"; //directory that saves images post by users
+    private String tempPath = "E:\\Upload\\temp\\";
+
+    public FileUpload(TopicService topicService,ItemService itemService){
+        this.topicService = topicService;
+        this.itemService = itemService;
+    }
+    //-------------------<accept data from the form and images>----------------------
+    public void uploadFile(HttpServletRequest request, int userId) {
+        File tmpFile = new File(tempPath);
+        if (!tmpFile.exists()) {
+            tmpFile.mkdir();
+        }
+        try {
+            DiskFileItemFactory factory = new DiskFileItemFactory();
+            //set a upper bound of the image size if going beyond, move to temp dir
+            factory.setSizeThreshold(1024 * 100);
+            factory.setRepository(tmpFile);
+            ServletFileUpload upload = new ServletFileUpload(factory);
+            upload.setProgressListener(new ProgressListener() {
+                public void update(long pBytesRead, long pContentLength, int arg2) {
+                    //System.out.println("file size：" + pContentLength + ",done：" + pBytesRead);
+                }
+            });
+            upload.setHeaderEncoding("UTF-8");
+            //detect whether data is from the form
+            if (!ServletFileUpload.isMultipartContent(request)) {
+                return;
+            }
+
+            upload.setFileSizeMax(1024 * 1024);
+            //设置上传文件总量的最大值，最大值=同时上传的多个文件的大小的最大值的和，目前设置为10MB
+            upload.setSizeMax(1024 * 1024 * 10);
+            List<FileItem> list = upload.parseRequest(request);
+            //System.out.println("list size:"+ list.size());
+            Topic topic = new Topic();
+            List<Item> items = new ArrayList<>();
+            Item item = new Item();
+            for (FileItem fileItem : list) {
+                //for common data
+                if (fileItem.isFormField())
+                    makeTopicAndItem(topic,item,fileItem);
+                else {//for images
+                    saveImage(fileItem,item,items);
+                    System.out.println("Upload succeeds");
+                }
+            }
+           // User user = userService.selectUserByName(username);
+            topic.setUsers_UserID(userId);
+            topic.setCreateTime(new Date());
+            topicService.save(topic);
+            System.out.println("=========="+topic);
+            for (Item newItem: items){
+                newItem.setTopicID(topic.getTopicID());
+                System.out.println("=========="+newItem);
+                itemService.save(newItem);
+            }
+        } catch (FileUploadBase.FileSizeLimitExceededException e) {
+            e.printStackTrace();
+            System.out.println("A single file exceeds the maximum size！");
+        } catch (FileUploadBase.SizeLimitExceededException e) {
+            System.out.println("The total file size exceeds the maximum！");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("upload failed！");
+            e.printStackTrace();
+        }
+    }
+
+
+    private void makeTopicAndItem(Topic topic,Item item,FileItem fileItem) throws UnsupportedEncodingException {
+        String itemName = fileItem.getFieldName();
+        if (itemName.equals("Title"))
+            topic.setTitle(fileItem.getString("UTF-8"));
+        else if (itemName.equals("Address"))
+            topic.setAddress(fileItem.getString("UTF-8"));
+        else if (itemName.equals("Contact"))
+            topic.setContact(fileItem.getString("UTF-8"));
+        else {
+            System.out.println("item name:" + itemName);
+            if (itemName.substring(0, 7).equals("itemdes")) {
+                item.setDescription(fileItem.getString("UTF-8"));
+            } else if (itemName.substring(0, 7).equals("itemnam")) {
+                item.setItemName(fileItem.getString("UTF-8"));
+            } else if (itemName.substring(0, 7).equals("itempri")) {
+                item.setPrice(Double.parseDouble(fileItem.getString("UTF-8")));
+            } else if (itemName.substring(0, 7).equals("itemtyp")) {
+                System.out.println("=============="+fileItem.getString("UTF-8"));
+                if (fileItem.getString("UTF-8").equals("book"))
+                    item.setCatID(2);
+                else if (fileItem.getString("UTF-8").equals("car"))
+                    item.setCatID(1);
+                else if (fileItem.getString("UTF-8").equals("furniture"))
+                    item.setCatID(3);
+            }
+        }
+    }
+
+    private void saveImage(FileItem fileItem,Item item,List<Item> items) throws IOException {
+        String filename = fileItem.getName();
+        //System.out.println(filename);
+        if (filename == null || filename.trim().equals("")) {
+            item.setImagePath("");
+            items.add(item);
+            System.out.println(item);
+            item = new Item();
+            return;
+        }
+        filename = filename.substring(filename.lastIndexOf("\\") + 1); //remove path to get file name
+        //  String fileExtName = filename.substring(filename.lastIndexOf(".")+1); //get extension which can be used to limit file types
+
+        InputStream in = fileItem.getInputStream();
+        String saveFilename = makeFileName(filename);
+        String[] getPath = makePath(saveFilename, savePath);
+        String realSavePath = getPath[0];
+        FileOutputStream out = new FileOutputStream(realSavePath + "\\" + saveFilename);
+        byte buffer[] = new byte[1024];
+        int len = 0;
+        while ((len = in.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+        }
+        item.setImagePath(getPath[1] + "\\" + saveFilename);
+        items.add(item);
+        System.out.println(item);
+        item = new Item();
+        in.close();
+    }
+
+    //-------------------<generate a file name>-------------------------------
+    private String makeFileName(String filename) {
+        return UUID.randomUUID().toString() + "_" + filename;
+    }
+
+    //-------------------<generate a unique dir for each user>-------------------------------
+    private String[] makePath(String filename, String savePath) {
+        int hashcode = filename.hashCode();
+        int dir1 = hashcode & 0xf;  //0--15
+        int dir2 = (hashcode & 0xf0) >> 4;  //0-15
+        String[] dirs = new String[2];
+        dirs[0] = savePath + "\\" + dir1 + "\\" + dir2;  //absolute path
+        dirs[1] = "\\upload" + "\\" + dir1 + "\\" + dir2;  //relative path for saving in the db
+
+        File file = new File(dirs[0]);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return dirs;
+    }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.forum.mapper.FavoriteMapper">
+
+    <select id="favoriteExist" parameterType="com.forum.entity.Favorite" resultType="com.forum.entity.Favorite">
+        SELECT * FROM favorites
+        WHERE UserID = #{userID} AND ItemID = #{itemID}
+
+    </select>
+
+    <select id="selectFavoriteListByUser" parameterType="int" resultType="com.forum.entity.Favorite">
+        SELECT * FROM favorites
+        WHERE UserID = #{userID}
+    </select>
+
+    <insert id="addFavorite" parameterType="com.forum.entity.Favorite">
+        INSERT INTO favorites (UserID,ItemID) VALUES(#{userID},#{itemID})
+    </insert>
+    <delete id="deleteFavorite" parameterType="com.forum.entity.Favorite">
+        DELETE FROM favorites
+        WHERE UserID = #{userID} AND ItemID=#{itemID}
+    </delete>
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.forum.mapper.NotificationMapper">
+
+    <insert id="insertNotification" parameterType="com.forum.entity.Notification">
+        INSERT INTO notifications (UserID,CommentID,Viewed,Author)
+        VALUES (#{UserID},#{CommentID},0,#{Author})
+    </insert>
+
+    <select id="selectNoteByUser" parameterType="int" resultType="com.forum.entity.Notification">
+        SELECT * FROM notifications
+        WHERE UserID = #{userID} AND Viewed = 0
+    </select>
+
+</mapper>

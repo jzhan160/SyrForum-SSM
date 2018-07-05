@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.forum.mapper.TopicMapper">
+
+    <resultMap type="com.forum.entity.Topic" id="BaseResultMap">
+        <id column="TopicID" property="TopicID" jdbcType="INTEGER"/>
+        <result column="Title" property="Title" jdbcType="VARCHAR"/>
+        <result column="CreateTime" property="CreateTime" jdbcType="DATE"/>
+        <result column="Users_UserID" property="Users_UserID" jdbcType="INTEGER"/>
+        <result column="Contact" property="Contact" jdbcType="VARCHAR"/>
+        <result column="Address" property="Address" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        TopicID, Title, CreateTime, Users_UserID,Contact,Address
+    </sql>
+    <select id="selectOneTopicById" parameterType="int" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"></include>
+        FROM topics WHERE TopicID = #{value}
+    </select>
+    <select id="selectTopicsByUser" parameterType="int" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"></include>
+        FROM topics WHERE Users_UserID = #{value}
+        ORDER BY TopicID DESC
+    </select>
+    <insert id="insertTopic" parameterType="com.forum.entity.Topic">
+        <selectKey resultType="java.lang.Integer" keyProperty="TopicID"
+                   order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO topics(Title,CreateTime,Users_UserID,Contact,Address) VALUES(#{Title},#{CreateTime},#{Users_UserID},#{Contact},#{Address});
+    </insert>
+
+</mapper>
